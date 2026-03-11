@@ -1,0 +1,30 @@
+# Compiled binaries
+build/bin/
+*.exe
+
+# Debug logs
+*.log
+*_debug*.txt
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Go
+*.exe.bak
+*_test.go
+
+# Intermediate icon files (keep .ico and winres.json)
+winres/icon.png
+winres/icon16.png
+
+# Downloads folder
+downloads/

@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build
+        run: |
+          $env:GOOS="windows"
+          $env:GOARCH="amd64"
+          go run github.com/tc-hib/go-winres@latest make
+          go build -tags "desktop production" `
+            -ldflags="-s -w -H windowsgui" `
+            -o vintecinco_dl.exe .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: vintecinco_dl.exe
+
+  build-linux:
+    name: Build (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            pkg-config \
+            build-essential
+
+      - name: Build
+        run: |
+          GOOS=linux GOARCH=amd64 go build \
+            -tags "webkit2_41 desktop production" \
+            -ldflags="-s -w" \
+            -o vintecinco_dl .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: vintecinco_dl
+
+  release:
+    name: Publish Release
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux
+
+      - name: Rename binaries with version
+        run: |
+          TAG="${{ github.ref_name }}"
+          mv vintecinco_dl.exe "vintecinco_dl-${TAG}-windows-amd64.exe"
+          mv vintecinco_dl "vintecinco_dl-${TAG}-linux-amd64"
+          chmod +x "vintecinco_dl-${TAG}-linux-amd64"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            vintecinco_dl-*-windows-amd64.exe
+            vintecinco_dl-*-linux-amd64

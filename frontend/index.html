@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#08080c;color:#d4d4e0;
+ height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;user-select:none}
+.screen{display:none;height:100vh}
+.screen.active{display:flex}
+
+/* ===== LAUNCHER ===== */
+#launcher{flex-direction:column;align-items:center;justify-content:center;gap:10px;position:relative}
+#launcher .header{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+#launcher h1{font-size:30px;font-weight:800;letter-spacing:-1px;
+ background:linear-gradient(135deg,#fff 0%,#a0a0b0 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.gh-link{color:#555;transition:color .2s,transform .2s;display:flex;align-items:center;margin-left:4px;cursor:pointer}
+.gh-link:hover{color:#fff;transform:scale(1.15)}
+.subtitle{font-size:13px;color:#555;margin-bottom:36px;margin-top:16px;letter-spacing:2px;text-transform:uppercase}
+.title-gif{width:46px;height:46px;border-radius:12px;object-fit:cover;box-shadow:0 0 20px rgba(236,72,153,0.3)}
+.grid{display:flex;flex-wrap:wrap;justify-content:center;gap:22px;max-width:900px;padding:0 24px}
+.card{width:148px;border-radius:18px;background:linear-gradient(145deg,#141418 0%,#1a1a22 100%);
+ border:1.5px solid rgba(255,255,255,0.06);cursor:pointer;
+ transition:all 0.3s cubic-bezier(0.175,0.885,0.32,1.275);overflow:hidden;
+ display:flex;flex-direction:column;align-items:center;position:relative}
+.card::before{content:'';position:absolute;inset:0;border-radius:18px;
+ background:radial-gradient(circle at 50% 0%,rgba(74,222,128,0.3) 0%,transparent 70%);
+ opacity:0;transition:opacity 0.3s ease;pointer-events:none}
+.card:hover{transform:translateY(-8px) scale(1.03);border-color:var(--accent);
+ box-shadow:0 12px 40px rgba(0,0,0,0.6),0 0 24px var(--glow),inset 0 1px 0 rgba(255,255,255,0.08)}
+.card:hover::before{opacity:1}
+.card:active{transform:translateY(-3px) scale(1.01);transition-duration:0.1s}
+.card-img{width:100%;height:105px;object-fit:cover;border-bottom:1px solid rgba(255,255,255,0.05);transition:filter 0.3s ease}
+.card:hover .card-img{filter:brightness(1.1) saturate(1.1)}
+.card-name{padding:14px 10px;font-size:14px;font-weight:600;text-align:center;letter-spacing:0.5px;color:#ccc;transition:color 0.3s ease}
+.card:hover .card-name{color:#fff}
+
+/* ===== PLATFORM SCREENS ===== */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:18px;height:18px;border:2px solid #333;border-top-color:var(--accent,#4ade80);border-radius:50%;
+ animation:spin .6s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
+
+#platform-login{flex-direction:column;align-items:center;justify-content:center;gap:16px;position:relative;
+ background:#0d0d1a;background-image:radial-gradient(ellipse at 20% 50%,rgba(99,102,241,0.06) 0%,transparent 60%),
+ radial-gradient(ellipse at 80% 50%,rgba(236,72,153,0.06) 0%,transparent 60%)}
+#platform-login h1{font-size:28px;color:#fff;letter-spacing:-0.5px;font-weight:700}
+#platform-login .sub{font-size:13.5px;color:#8888a0;margin-bottom:4px}
+#platform-login input{width:340px;padding:12px 14px;border:1px solid #252540;border-radius:10px;
+ background:#13132a;color:#fff;font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s}
+#platform-login input:focus{border-color:var(--accent,#4ade80);box-shadow:0 0 0 3px rgba(74,222,128,0.07)}
+.btn-login{width:340px;padding:12px;border:none;border-radius:10px;margin-top:2px;
+ background:linear-gradient(135deg,#4ade80,#22d3ee);color:#0d0d1a;
+ font-size:14.5px;font-weight:600;cursor:pointer;transition:opacity .2s,transform .1s;
+ display:inline-flex;align-items:center;justify-content:center}
+.btn-login:hover{opacity:.9}.btn-login:active{transform:scale(.985)}
+.btn-login:disabled{opacity:.35;cursor:default;transform:none}
+#platform-login .status{font-size:13px;min-height:22px;display:flex;align-items:center;justify-content:center}
+.st-err{color:#ff6b6b}.st-info{color:#8888a0}
+.lang-wrap{position:absolute;top:18px;right:22px}
+.lang-sel{background:#13132a;color:#8888a0;border:1px solid #252540;border-radius:8px;
+ padding:5px 10px;font-size:12px;cursor:pointer;outline:none}
+.lang-sel option{background:#13132a;color:#d4d4e0}
+
+#platform-courses{flex-direction:column;padding:24px 28px 20px;gap:12px;background:#0d0d1a}
+.header-row{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.header-row h2{flex:1;font-size:20px;color:#fff;font-weight:600}
+.toolbar{display:flex;gap:8px;flex-shrink:0;align-items:stretch}
+.search-wrap{position:relative;flex:1}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#555;display:flex;align-items:center}
+.search-icon svg{width:15px;height:15px}
+.search{width:100%;padding:9px 14px 9px 36px;border:1px solid #252540;border-radius:10px;
+ background:#13132a;color:#fff;font-size:13.5px;outline:none;transition:border-color .2s,box-shadow .2s}
+.search:focus{border-color:var(--accent,#4ade80);box-shadow:0 0 0 3px rgba(74,222,128,0.07)}
+.folder-row{display:flex;align-items:center;gap:10px;padding:8px 14px;
+ background:#13132a;border:1px solid #1a1a30;border-radius:10px;flex-shrink:0}
+.folder-row .folder-path{flex:1;font-size:12.5px;color:#8888a0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.folder-row .folder-label{font-size:12px;color:#666;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.folder-row .folder-label svg{width:14px;height:14px;opacity:.6}
+.list{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px;padding:2px 0 50px}
+.list::-webkit-scrollbar{width:5px}.list::-webkit-scrollbar-track{background:transparent}
+.list::-webkit-scrollbar-thumb{background:#252540;border-radius:4px}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.item{display:flex;align-items:center;gap:14px;padding:12px 14px;
+ background:#13132a;border:1px solid transparent;border-radius:12px;flex-shrink:0;
+ transition:background .15s,border-color .15s;animation:fadeSlideIn .25s ease both}
+.item:hover{background:#161630;border-color:#1e1e3a}
+.item.downloaded-item{border-left:3px solid rgba(74,222,128,0.25)}
+.item.partial-item{border-left:3px solid rgba(255,180,50,0.4)}
+.item.active-dl{border-left:3px solid var(--accent,#4ade80);border-color:rgba(74,222,128,0.19)}
+.item .no-thumb{width:52px;height:52px;border-radius:8px;background:#1a1a30;
+ display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.item .no-thumb svg{width:22px;height:22px;color:#333}
+.item img.thumb{width:52px;height:52px;border-radius:8px;object-fit:cover;background:#1a1a30;flex-shrink:0}
+.item .info{flex:1;min-width:0}
+.item .name{font-weight:600;font-size:13.5px;color:#eee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.4}
+.item .meta{font-size:11.5px;color:#777;margin-top:2px;display:flex;align-items:center;gap:6px}
+.badge-done{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;
+ background:rgba(74,222,128,0.08);color:var(--accent,#4ade80);border:1px solid rgba(74,222,128,0.15);display:inline-flex;align-items:center;gap:3px}
+.badge-partial{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;
+ background:rgba(255,180,50,0.08);color:#ffb432;border:1px solid rgba(255,180,50,0.15);display:inline-flex;align-items:center;gap:3px}
+.item .prog-area{margin-top:8px;display:none}
+.item .prog-area.visible{display:block}
+.minibar{height:6px;background:#1e1e35;border-radius:3px;overflow:hidden;width:100%}
+.minibar-fill{height:100%;border-radius:3px;transition:width .3s ease;width:0%;background:#4ade80}
+.minibar-fill.done{background:#4ade80}
+.minibar-fill.cancelled{background:#ff6b6b}
+.prog-text{font-size:11px;color:#777;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acts{display:flex;gap:6px;flex-shrink:0;align-items:center}
+.b{padding:7px 16px;border-radius:8px;font-size:12px;cursor:pointer;border:none;white-space:nowrap;
+ font-weight:500;transition:all .15s;min-height:32px;display:inline-flex;align-items:center}
+.b-dl{background:linear-gradient(135deg,#4ade80,#22d3ee);color:#0d0d1a;font-weight:600}
+.b-dl:hover{opacity:.85}.b-dl:active{transform:scale(.96)}
+.b-dl:disabled{opacity:.2;cursor:default;transform:none}
+.b-cancel{background:#ff6b6b0e;color:#ff6b6b;border:1px solid #ff6b6b20}
+.b-open{background:transparent;color:#8888a0;border:1px solid #2a2a40}
+.b-open:hover{color:#ccc;border-color:#444}
+.b-folder{background:#1a1a30;color:#bbb;border:1px solid #2a2a40;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;transition:all .15s}
+.b-folder:hover{background:#222240;color:#fff}
+.b-logout{background:transparent;border:1px solid #2a2a40;border-radius:8px;padding:5px 8px;
+ cursor:pointer;color:#777;display:flex;align-items:center;transition:all .15s}
+.b-logout:hover{color:#ff6b6b;border-color:#ff6b6b40}
+.b-back{position:fixed;bottom:20px;left:20px;z-index:99999;width:36px;height:36px;border-radius:50%;
+ border:none;background:rgba(255,255,255,0.07);color:#888;font-size:18px;cursor:pointer;
+ display:flex;align-items:center;justify-content:center;transition:all .25s;backdrop-filter:blur(8px);
+ box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+.b-back:hover{background:var(--accent,#4ade80);color:#0d0d1a;transform:scale(1.1);box-shadow:0 0 16px rgba(74,222,128,0.4)}
+.item .sel-check{width:16px;height:16px;accent-color:var(--accent,#4ade80);cursor:pointer;flex-shrink:0;margin:0}
+.sel-bar{display:none;position:fixed;bottom:0;left:0;right:0;
+ background:#13132aee;backdrop-filter:blur(12px);border-top:1px solid #252540;padding:12px 28px;
+ align-items:center;gap:12px;z-index:10}
+.sel-bar.visible{display:flex}
+.sel-bar .sel-count{font-size:13px;color:#ccc;flex:1}
+.sel-bar .b-sel-dl{background:linear-gradient(135deg,#4ade80,#22d3ee);color:#0d0d1a;font-weight:600;
+ padding:8px 20px;border-radius:8px;border:none;font-size:13px;cursor:pointer}
+.sel-bar .b-sel-clear{background:transparent;color:#888;border:1px solid #333;
+ padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer}
+.b-sel-all{background:#1a1a30;color:#999;border:1px solid #252540;padding:6px 12px;border-radius:8px;
+ font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.b-sel-all.active{background:rgba(74,222,128,0.08);color:var(--accent,#4ade80);border-color:rgba(74,222,128,0.25)}
+.header-sub{font-size:12px;color:#666;font-weight:400;margin-left:2px}
+.no-results{padding:32px 20px;text-align:center;color:#555;font-size:13.5px;display:none}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;
+ padding:48px 20px;color:#555;gap:10px;text-align:center}
+.empty-state svg{width:40px;height:40px;opacity:.3;margin-bottom:4px}
+
+.modal{border:none;background:#1a1a30;color:#e0e0e0;border-radius:14px;padding:28px;
+ max-width:400px;width:90%;box-shadow:0 20px 60px #00000080}
+.modal::backdrop{background:#00000088}
+.modal h3{font-size:16px;color:#fff;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.modal h3 svg{color:#fbbf24;flex-shrink:0}
+.modal p{font-size:13.5px;color:#999;line-height:1.6;margin-bottom:20px}
+.modal-acts{display:flex;gap:8px;justify-content:flex-end}
+.modal-acts button{padding:8px 20px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500;transition:all .15s}
+.modal-cancel{background:transparent;color:#888;border:1px solid #333}
+.modal-confirm{background:linear-gradient(135deg,#4ade80,#22d3ee);color:#0d0d1a;border:none;font-weight:600}
+
+.sg-list{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;margin-top:12px}
+.sg-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;
+ background:#13132a;border:1px solid #252540;cursor:pointer;color:#ddd;font-size:14px;
+ transition:all .15s;text-align:left;width:100%}
+.sg-item:hover{background:#1e1e3a;border-color:var(--accent,#4ade80)}
+.sg-img{width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0}
+.sg-name{flex:1;font-weight:500}
+
+.mini-dl{display:none;position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+ background:#161630;border:1px solid #252540;border-radius:12px;padding:10px 16px;
+ min-width:320px;max-width:420px;cursor:pointer;z-index:100;
+ backdrop-filter:blur(12px);box-shadow:0 4px 20px rgba(0,0,0,0.5);transition:all .2s}
+.mini-dl:hover{border-color:var(--mini-accent,#4ade80);box-shadow:0 4px 24px rgba(0,0,0,0.6)}
+.mini-dl.visible{display:flex;align-items:center;gap:12px}
+.mini-dl-icon{width:28px;height:28px;border-radius:6px;object-fit:cover;flex-shrink:0}
+.mini-dl-info{flex:1;min-width:0}
+.mini-dl-name{font-size:12px;font-weight:600;color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini-dl-detail{font-size:11px;color:#777;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini-dl-bar{height:5px;background:#1e1e35;border-radius:2px;margin-top:4px;overflow:hidden;width:100%}
+.mini-dl-fill{height:100%;border-radius:2px;transition:width .3s ease;width:0%;background:#4ade80}
+/* ===== DEPS STATUS BAR ===== */
+.deps-bar{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
+ display:flex;gap:10px;align-items:center;opacity:0;transition:opacity .4s ease}
+.deps-bar.loaded{opacity:1}
+.dep-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;
+ border-radius:20px;font-size:11px;font-weight:500;letter-spacing:0.3px;
+ border:1px solid;white-space:nowrap;cursor:default}
+.dep-ok{background:rgba(74,222,128,0.07);color:#4ade80;border-color:rgba(74,222,128,0.2)}
+.dep-err{background:rgba(255,107,107,0.07);color:#ff6b6b;border-color:rgba(255,107,107,0.2);
+ cursor:pointer;transition:background .15s}
+.dep-err:hover{background:rgba(255,107,107,0.14)}
+.dep-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+/* ===== SETUP SCREEN ===== */
+#setup-screen{flex-direction:column;align-items:center;justify-content:center;gap:28px}
+.setup-card{background:#0f0f1a;border:1px solid #1e1e35;border-radius:20px;
+ padding:32px 36px;width:380px;display:flex;flex-direction:column;gap:16px}
+.setup-title{font-size:20px;font-weight:700;color:#fff;text-align:center;letter-spacing:-0.3px}
+.setup-subtitle{font-size:13px;color:#555;text-align:center;line-height:1.5;margin-top:4px}
+.setup-dep{display:flex;flex-direction:column;gap:8px;padding:14px;
+ background:#13132a;border:1px solid #252540;border-radius:12px;
+ transition:border-color .3s}
+.setup-dep.dep-done{border-color:rgba(74,222,128,0.2)}
+.setup-dep.dep-error{border-color:rgba(255,107,107,0.25)}
+.setup-dep-head{display:flex;align-items:center;justify-content:space-between}
+.setup-dep-name{font-size:13px;font-weight:600;color:#ccc}
+.setup-dep-badge{font-size:11px;color:#666}
+.setup-bar{height:5px;background:#1e1e35;border-radius:3px;overflow:hidden}
+.setup-bar-fill{height:100%;border-radius:3px;width:0%;
+ background:linear-gradient(90deg,#4ade80,#22d3ee);transition:width .25s ease}
+.setup-bar-fill.err{background:#ff6b6b}
+.setup-err-msg{font-size:11.5px;color:#ff6b6b;line-height:1.5;white-space:pre-wrap}
+</style>
+</head>
+<body>
+
+<!-- ===== SETUP SCREEN ===== -->
+<div id="setup-screen" class="screen active" style="background:#08080c">
+ <div class="setup-card">
+  <div>
+   <div class="setup-title" id="setup-title">Checking dependencies...</div>
+   <div class="setup-subtitle" id="setup-subtitle">Verifying yt-dlp and ffmpeg</div>
+  </div>
+  <div id="setup-dep-ytdlp" class="setup-dep">
+   <div class="setup-dep-head">
+    <span class="setup-dep-name">yt-dlp</span>
+    <span class="setup-dep-badge" id="setup-badge-ytdlp">Waiting...</span>
+   </div>
+   <div class="setup-bar"><div class="setup-bar-fill" id="setup-fill-ytdlp"></div></div>
+   <div class="setup-err-msg" id="setup-err-ytdlp" style="display:none"></div>
+  </div>
+  <div id="setup-dep-ffmpeg" class="setup-dep">
+   <div class="setup-dep-head">
+    <span class="setup-dep-name">ffmpeg</span>
+    <span class="setup-dep-badge" id="setup-badge-ffmpeg">Waiting...</span>
+   </div>
+   <div class="setup-bar"><div class="setup-bar-fill" id="setup-fill-ffmpeg"></div></div>
+   <div class="setup-err-msg" id="setup-err-ffmpeg" style="display:none"></div>
+  </div>
+ </div>
+</div>
+
+<!-- ===== LAUNCHER SCREEN ===== -->
+<div id="launcher" class="screen">
+ <div class="header">
+  <img class="title-gif" src="assets/images/angry.gif" onerror="this.style.display='none'">
+  <h1>vintecinco_dl</h1>
+  <span class="gh-link" title="GitHub" onclick="window.runtime.BrowserOpenURL('https://github.com/owbryd/vintecinco_dl')">
+   <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+  </span>
+ </div>
+ <p class="subtitle">select a platform</p>
+ <div class="grid">
+  <div class="card" style="--accent:#ff90e8;--glow:#ff90e840" onclick="selectPlatform('gumroad','Gumroad','#ff90e8')">
+   <img class="card-img" src="assets/images/gumroad.png" onerror="this.style.background='#1a1a30'">
+   <div class="card-name">Gumroad</div>
+  </div>
+  <div class="card" style="--accent:#00c16e;--glow:#00c16e40" onclick="selectPlatform('kiwify','Kiwify','#00c16e')">
+   <img class="card-img" src="assets/images/kiwify.jpg" onerror="this.style.background='#1a1a30'">
+   <div class="card-name">Kiwify</div>
+  </div>
+  <div class="card" style="--accent:#e6ff32;--glow:#e6ff3240" onclick="selectPlatform('teachable','Teachable','#e6ff32')">
+   <img class="card-img" src="assets/images/teachable.jpg" onerror="this.style.background='#1a1a30'">
+   <div class="card-name">Teachable</div>
+  </div>
+  <div class="card" style="--accent:#f04e23;--glow:#f04e2340" onclick="selectPlatform('hotmart','Hotmart','#f04e23')">
+   <img class="card-img" src="assets/images/hotmart.jpg" onerror="this.style.background='#1a1a30'">
+   <div class="card-name">Hotmart</div>
+  </div>
+  <div class="card" style="--accent:#2e91fc;--glow:#2e91fc40" onclick="selectPlatform('kajabi','Kajabi','#2e91fc')">
+   <img class="card-img" src="assets/images/kajabi.png" onerror="this.style.background='#1a1a30'">
+   <div class="card-name">Kajabi</div>
+  </div>
+  <div class="card" style="--accent:#e0b467;--glow:#e0b46740" onclick="selectPlatform('skool','Skool','#e0b467')">
+   <img class="card-img" src="assets/images/skool.png" onerror="this.style.background='#1a1a30'">
+   <div class="card-name">Skool</div>
+  </div>
+  <div class="card" style="--accent:#e80a89;--glow:#e80a8940" onclick="selectPlatform('pluralsight','Pluralsight','#e80a89')">
+   <img class="card-img" src="assets/images/pluralsight.webp" onerror="this.style.background='#1a1a30'">
+   <div class="card-name">Pluralsight</div>
+  </div>
+  <div class="card" style="--accent:#c8a951;--glow:#c8a95140" onclick="selectPlatform('greatcourses','Great Courses','#c8a951')">
+   <img class="card-img" src="assets/images/greatcourses.png" onerror="this.style.background='#1a1a30'">
+   <div class="card-name">Great Courses</div>
+  </div>
+  <div class="card" style="--accent:#e74c3c;--glow:#e74c3c40" onclick="selectPlatform('masterclass','MasterClass','#e74c3c')">
+   <img class="card-img" src="assets/images/masterclass.jpg" onerror="this.style.background='#1a1a30'">
+   <div class="card-name">MasterClass</div>
+  </div>
+  <div class="card" style="--accent:#fccc18;--glow:#fccc1840" onclick="selectPlatform('thinkific','Thinkific','#fccc18')">
+   <img class="card-img" src="assets/images/thinkific.png" onerror="this.parentElement.style.background='linear-gradient(145deg,#1a1a30,#16163a)'">
+   <div class="card-name">Thinkific</div>
+  </div>
+ </div>
+ <div id="mini-dl" class="mini-dl" onclick="resumeFromMini()">
+  <img id="mini-dl-icon" class="mini-dl-icon" src="" style="display:none">
+  <div class="mini-dl-info">
+   <div class="mini-dl-name" id="mini-dl-name"></div>
+   <div class="mini-dl-detail" id="mini-dl-detail"></div>
+   <div class="mini-dl-bar"><div class="mini-dl-fill" id="mini-dl-fill"></div></div>
+  </div>
+ </div>
+ <div id="deps-bar" class="deps-bar">
+  <span id="dep-ytdlp" class="dep-pill"></span>
+  <span id="dep-ffmpeg" class="dep-pill"></span>
+ </div>
+</div>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="platform-login" class="screen">
+ <button class="b-back" onclick="goBack()">&#8592;</button>
+ <div class="lang-wrap">
+  <select class="lang-sel" onchange="setLang(this.value)">
+   <option value="pt">PT</option><option value="en">EN</option><option value="es">ES</option>
+  </select>
+ </div>
+ <h1 id="login-title">Downloader</h1>
+ <div class="sub" id="login-sub"></div>
+ <input id="email" placeholder="Email" autocomplete="off" spellcheck="false">
+ <input id="password" type="password" placeholder="">
+ <button id="btn-login" class="btn-login" onclick="doLogin()"></button>
+ <div id="status" class="status" role="status"></div>
+</div>
+
+<!-- ===== COURSES SCREEN ===== -->
+<div id="platform-courses" class="screen">
+ <button class="b-back" onclick="goBackFromCourses()">&#8592;</button>
+ <div class="header-row">
+  <h2 id="title"></h2>
+  <select class="lang-sel" onchange="setLang(this.value)">
+   <option value="pt">PT</option><option value="en">EN</option><option value="es">ES</option>
+  </select>
+  <button class="b-logout" onclick="doLogout()">
+   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+   </svg>
+  </button>
+ </div>
+ <div class="toolbar">
+  <div class="search-wrap">
+   <span class="search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+   <input id="search-input" class="search" placeholder="" oninput="filterList()" spellcheck="false" autocomplete="off">
+  </div>
+  <button id="btn-sel-all" class="b-sel-all" onclick="toggleSelectAll()">
+   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+   <span id="sel-all-label"></span>
+  </button>
+ </div>
+ <div class="folder-row">
+  <span class="folder-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></span>
+  <span id="folder-path" class="folder-path">...</span>
+  <button class="b-folder" onclick="pickFolder()" id="btn-change-folder"></button>
+ </div>
+ <div id="list" class="list" role="list"></div>
+ <div id="no-results" class="no-results"></div>
+ <div id="sel-bar" class="sel-bar">
+  <span class="sel-count" id="sel-count"></span>
+  <button class="b-sel-clear" id="btn-sel-clear" onclick="clearSelection()"></button>
+  <button class="b-sel-dl" id="btn-sel-dl" onclick="confirmBatchDownload()"></button>
+ </div>
+</div>
+
+<!-- ===== BATCH CONFIRM DIALOG ===== -->
+<dialog id="dlg-batch" class="modal">
+ <h3>
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+   <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+   <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+  <span id="dlg-title"></span>
+ </h3>
+ <p id="dlg-msg"></p>
+ <div class="modal-acts">
+  <button class="modal-cancel" onclick="closeDlg()"></button>
+  <button class="modal-confirm" onclick="confirmDl()"></button>
+ </div>
+</dialog>
+
+<!-- ===== SUBGROUP PICKER DIALOG ===== -->
+<dialog id="dlg-subgroup" class="modal" style="max-width:440px">
+ <h3 id="dlg-sg-title"></h3>
+ <div id="dlg-sg-list" class="sg-list"></div>
+</dialog>
+
+<!-- ===== GENERIC CONFIRM DIALOG ===== -->
+<dialog id="dlg-confirm" class="modal">
+ <h3>
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+   <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+   <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+  <span id="dlg-confirm-title"></span>
+ </h3>
+ <p id="dlg-confirm-msg"></p>
+ <div class="modal-acts">
+  <button class="modal-cancel" onclick="resolveConfirmDlg(false)"></button>
+  <button id="dlg-confirm-btn" class="modal-confirm" onclick="resolveConfirmDlg(true)"></button>
+ </div>
+</dialog>
+
+<!-- ===== DOWNLOAD CONFLICT DIALOG ===== -->
+<dialog id="dlg-conflict" class="modal">
+ <h3>
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+   <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+   <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+  <span id="dlg-conflict-title"></span>
+ </h3>
+ <p id="dlg-conflict-msg"></p>
+ <div class="modal-acts">
+  <button class="modal-cancel" onclick="closeConflictDlg()"></button>
+  <button class="modal-confirm" style="background:#ff6b6b" onclick="cancelAndStartNew()"></button>
+ </div>
+</dialog>
+
+<script>
+// ===== STATE =====
+let activePlatform = '';
+let platformName = '';
+let accentColor = '#4ade80';
+let products = [];
+let dl = {index:-1,status:'idle',current:0,total:0,pct:0,file:'',folder:''};
+let selected = new Set();
+let batchRunning = false;
+let batchCount = 0;
+let loginStep = 'credentials';
+let otpEmail = '';
+let sessions = {};
+let dlPlatform = '';
+const platformColors = {gumroad:'#ff90e8',kiwify:'#00c16e',teachable:'#e6ff32',hotmart:'#f04e23',kajabi:'#2e91fc',skool:'#e0b467',pluralsight:'#e80a89',masterclass:'#e74c3c',thinkific:'#fccc18'};
+const platformImages = {gumroad:'assets/images/gumroad.png',kiwify:'assets/images/kiwify.jpg',teachable:'assets/images/teachable.jpg',hotmart:'assets/images/hotmart.jpg',kajabi:'assets/images/kajabi.png',skool:'assets/images/skool.png',pluralsight:'assets/images/pluralsight.webp',masterclass:'assets/images/masterclass.jpg',thinkific:'assets/images/thinkific.png'};
+
+// ===== i18n =====
+const langs = {
+ pt:{subtitle:'Baixe seus cursos',password:'Senha',login:'Entrar',
+  authenticating:'Autenticando...',auth_fail:'Falha na autenticacao!',
+  loading_courses:'Carregando cursos...',your_courses:'Seus Cursos',
+  search:'Pesquisar...',change:'Alterar',lessons:'aulas',
+  download:'Baixar',download_again:'Baixar novamente',open_folder:'Abrir pasta',
+  delete_course:'Apagar',confirm_delete:'Tem certeza que deseja apagar este curso?',
+  confirm_redownload:'Isso vai apagar o curso atual e baixar novamente. Continuar?',
+  delete_error:'Não foi possível apagar. Verifique se os arquivos não estão abertos.',
+  cancel:'Cancelar',
+  cancelled:'Cancelado',complete:'Download concluido!',
+  no_products:'Nenhum curso encontrado.',downloaded:'Baixado',
+  x_downloaded:'baixados',no_results:'Nenhum resultado encontrado.',
+  select_all:'Selecionar todos',deselect_all:'Desmarcar todos',x_selected:'selecionados',
+  clear_sel:'Limpar',download_sel:'Baixar selecionados',
+  warn_title:'Atenção',warn_batch:'Para evitar o bloqueio da conta, os downloads não serão feitos simultaneamente, e sim sucessivamente. Deseja continuar?',
+  confirm:'Continuar',btn_cancel:'Cancelar',course:'Curso',
+  send_otp:'Enviar codigo',verify_otp:'Verificar',otp_sent_msg:'Codigo enviado! Verifique seu email.',
+  otp_code:'Codigo OTP',token_label:'Token (hmVlcIntegration)',
+  token_hint:'Cole o cookie hmVlcIntegration do navegador',
+  ps_cookie_label:'Cookies (Pluralsight)',
+  ps_cookie_hint:'Cole os cookies do Pluralsight (F12 > Network > cookie header)',
+  mc_cookie_label:'Cookies (MasterClass)',
+  mc_cookie_hint:'Cole os cookies do MasterClass (F12 > Network > cookie header)',
+  tk_url_label:'Página de login do site',
+  tk_url_hint:'Digite a página de login do site: ex: meusite.thinkific.com/users/sign_in',
+  select_subgroup:'Selecione',
+  restoring:'Restaurando sessao...',
+  dl_conflict_title:'Download em andamento',
+  dl_conflict_msg:'Ja existe um download em andamento no %s. Cancele o download atual para iniciar um novo ou aguarde a conclusao.',
+  cancel_and_start:'Cancelar e iniciar novo',
+  wait:'Aguardar',continue_dl:'Continuar download',incomplete:'Incompleto'},
+ en:{subtitle:'Download your courses',password:'Password',login:'Log in',
+  authenticating:'Authenticating...',auth_fail:'Authentication failed!',
+  loading_courses:'Loading courses...',your_courses:'Your Courses',
+  search:'Search...',change:'Change',lessons:'lessons',
+  download:'Download',download_again:'Download again',open_folder:'Open folder',
+  delete_course:'Delete',confirm_delete:'Are you sure you want to delete this course?',
+  confirm_redownload:'This will delete the current course and download again. Continue?',
+  delete_error:'Could not delete. Make sure the files are not open.',
+  cancel:'Cancel',
+  cancelled:'Cancelled',complete:'Download complete!',
+  no_products:'No courses found.',downloaded:'Downloaded',
+  x_downloaded:'downloaded',no_results:'No results found.',
+  select_all:'Select all',deselect_all:'Deselect all',x_selected:'selected',
+  clear_sel:'Clear',download_sel:'Download selected',
+  warn_title:'Warning',warn_batch:'To avoid account suspension, downloads will run sequentially, not simultaneously. Continue?',
+  confirm:'Continue',btn_cancel:'Cancel',course:'Course',
+  send_otp:'Send code',verify_otp:'Verify',otp_sent_msg:'Code sent! Check your email.',
+  otp_code:'OTP Code',token_label:'Token (hmVlcIntegration)',
+  token_hint:'Paste hmVlcIntegration cookie from your browser',
+  ps_cookie_label:'Cookies (Pluralsight)',
+  ps_cookie_hint:'Paste Pluralsight cookies (F12 > Network > cookie header)',
+  mc_cookie_label:'Cookies (MasterClass)',
+  mc_cookie_hint:'Paste MasterClass cookies (F12 > Network > cookie header)',
+  tk_url_label:'Login page URL',
+  tk_url_hint:'Enter the site login page: e.g. mysite.thinkific.com/users/sign_in',
+  select_subgroup:'Select',
+  restoring:'Restoring session...',
+  dl_conflict_title:'Download in progress',
+  dl_conflict_msg:'A download is already running on %s. Cancel it to start a new one or wait for it to finish.',
+  cancel_and_start:'Cancel and start new',
+  wait:'Wait',continue_dl:'Continue download',incomplete:'Incomplete'},
+ es:{subtitle:'Descarga tus cursos',password:'Contrasena',login:'Iniciar sesion',
+  authenticating:'Autenticando...',auth_fail:'Error de autenticacion!',
+  loading_courses:'Cargando cursos...',your_courses:'Tus Cursos',
+  search:'Buscar...',change:'Cambiar',lessons:'lecciones',
+  download:'Descargar',download_again:'Descargar de nuevo',open_folder:'Abrir carpeta',
+  delete_course:'Eliminar',confirm_delete:'Esta seguro de que desea eliminar este curso?',
+  confirm_redownload:'Esto eliminara el curso actual y lo descargara de nuevo. Continuar?',
+  delete_error:'No se pudo eliminar. Verifique que los archivos no estén abiertos.',
+  cancel:'Cancelar',
+  cancelled:'Cancelado',complete:'Descarga completada!',
+  no_products:'No se encontraron cursos.',downloaded:'Descargado',
+  x_downloaded:'descargados',no_results:'No se encontraron resultados.',
+  select_all:'Seleccionar todos',deselect_all:'Deseleccionar todos',x_selected:'seleccionados',
+  clear_sel:'Limpiar',download_sel:'Descargar seleccionados',
+  warn_title:'Atención',warn_batch:'Para evitar el bloqueo de cuenta, las descargas se harán de forma sucesiva, no simultánea. ¿Desea continuar?',
+  confirm:'Continuar',btn_cancel:'Cancelar',course:'Curso',
+  send_otp:'Enviar codigo',verify_otp:'Verificar',otp_sent_msg:'Codigo enviado! Revise su email.',
+  otp_code:'Codigo OTP',token_label:'Token (hmVlcIntegration)',
+  token_hint:'Pegue la cookie hmVlcIntegration del navegador',
+  ps_cookie_label:'Cookies (Pluralsight)',
+  ps_cookie_hint:'Pegue las cookies de Pluralsight (F12 > Network > cookie header)',
+  mc_cookie_label:'Cookies (MasterClass)',
+  mc_cookie_hint:'Pegue las cookies de MasterClass (F12 > Network > cookie header)',
+  tk_url_label:'Página de inicio de sesión',
+  tk_url_hint:'Ingresa la página de login del sitio: ej: misiitio.thinkific.com/users/sign_in',
+  select_subgroup:'Seleccione',
+  restoring:'Restaurando sesion...',
+  dl_conflict_title:'Descarga en curso',
+  dl_conflict_msg:'Ya hay una descarga en curso en %s. Cancele la descarga actual para iniciar una nueva o espere a que termine.',
+  cancel_and_start:'Cancelar e iniciar nueva',
+  continue_dl:'Continuar descarga',incomplete:'Incompleto',
+  wait:'Esperar'}
+};
+let curLang='pt';
+function t(k){return(langs[curLang]||langs.pt)[k]||k}
+function detectLang(){const n=(navigator.language||'').toLowerCase();if(n.startsWith('es'))return'es';if(n.startsWith('en'))return'en';return'pt'}
+function setLang(lang){
+ curLang=lang;
+ document.querySelectorAll('.lang-sel').forEach(s=>s.value=lang);
+ applyLang();
+ if(products.length)renderList();
+}
+function applyLang(){
+ if(activePlatform==='hotmart'){
+  document.getElementById('email').placeholder=t('token_label');
+  document.getElementById('login-sub').textContent=t('token_hint');
+  document.getElementById('btn-login').textContent=t('login');
+ }else if(activePlatform==='pluralsight'){
+  document.getElementById('email').placeholder=t('ps_cookie_label');
+  document.getElementById('login-sub').textContent=t('ps_cookie_hint');
+  document.getElementById('btn-login').textContent=t('login');
+ }else if(activePlatform==='masterclass'){
+  document.getElementById('email').placeholder=t('mc_cookie_label');
+  document.getElementById('login-sub').textContent=t('mc_cookie_hint');
+  document.getElementById('btn-login').textContent=t('login');
+ }else if(activePlatform==='thinkific'){
+  document.getElementById('email').placeholder=t('tk_url_label');
+  document.getElementById('password').placeholder=t('password');
+  document.getElementById('login-sub').textContent=t('tk_url_hint');
+  document.getElementById('btn-login').textContent=t('login');
+ }else if((activePlatform==='teachable'||activePlatform==='kajabi')&&loginStep==='otp'){
+  document.getElementById('password').placeholder=t('otp_code');
+  document.getElementById('btn-login').textContent=t('verify_otp');
+  document.getElementById('login-sub').textContent=t('subtitle');
+ }else if(activePlatform==='teachable'||activePlatform==='kajabi'){
+  document.getElementById('btn-login').textContent=t('send_otp');
+  document.getElementById('login-sub').textContent=t('subtitle');
+ }else{
+  document.getElementById('password').placeholder=t('password');
+  document.getElementById('btn-login').textContent=t('login');
+  document.getElementById('login-sub').textContent=t('subtitle');
+ }
+ document.getElementById('search-input').placeholder=t('search');
+ document.getElementById('btn-change-folder').textContent=t('change');
+ document.getElementById('sel-all-label').textContent=t('select_all');
+ document.getElementById('btn-sel-clear').textContent=t('clear_sel');
+ document.getElementById('btn-sel-dl').textContent=t('download_sel');
+ updateSelBar();
+}
+curLang=detectLang();
+document.querySelectorAll('.lang-sel').forEach(s=>s.value=curLang);
+applyLang();
+
+// ===== INIT & DEPS SETUP =====
+function updateSetupDep(name, pct, done, errMsg){
+ const key=name==='yt-dlp'?'ytdlp':'ffmpeg';
+ const card=document.getElementById('setup-dep-'+key);
+ const fill=document.getElementById('setup-fill-'+key);
+ const badge=document.getElementById('setup-badge-'+key);
+ const errEl=document.getElementById('setup-err-'+key);
+ if(errMsg){
+  fill.className='setup-bar-fill err';fill.style.width='100%';
+  badge.textContent='Error';badge.style.color='#ff6b6b';
+  card.classList.add('dep-error');
+  errEl.textContent=errMsg;errEl.style.display='block';
+ }else if(done){
+  fill.style.width='100%';
+  badge.textContent='✓ Ready';badge.style.color='#4ade80';
+  card.classList.add('dep-done');
+ }else{
+  fill.style.width=pct+'%';
+  badge.textContent=Math.round(pct)+'%';badge.style.color='#8888a0';
+ }
+}
+
+function updateDepsBar(deps){
+ function pill(id,name,ok,url){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.className='dep-pill '+(ok?'dep-ok':'dep-err');
+  el.innerHTML='<span class="dep-dot"></span>'+name+(ok?' ✓':' ✗');
+  if(!ok){el.title='Click to install';el.onclick=()=>window.runtime.BrowserOpenURL(url);}
+ }
+ pill('dep-ytdlp','yt-dlp',deps.ytdlp,'https://github.com/yt-dlp/yt-dlp#installation');
+ pill('dep-ffmpeg','ffmpeg',deps.ffmpeg,'https://ffmpeg.org/download.html');
+ document.getElementById('deps-bar').classList.add('loaded');
+}
+
+(async function initApp(){
+ let deps;
+ try{ deps=await window.go.main.App.CheckDeps(); }catch(e){ deps={ytdlp:false,ffmpeg:false}; }
+
+ const needDownload=!deps.ytdlp||!deps.ffmpeg;
+
+ if(needDownload){
+  // Update title to show we're actually installing
+  document.getElementById('setup-title').textContent='Setting up vintecinco_dl';
+  document.getElementById('setup-subtitle').textContent='Downloading required tools. This only happens once.';
+ }
+
+ // Mark already-installed deps immediately
+ if(deps.ytdlp) updateSetupDep('yt-dlp',100,true,null);
+ if(deps.ffmpeg) updateSetupDep('ffmpeg',100,true,null);
+
+ if(needDownload){
+  // Register progress listener before calling EnsureDeps
+  window.runtime.EventsOn('dep_progress',(d)=>{
+   updateSetupDep(d.name, d.percent||0, d.done||false, d.error||null);
+  });
+  try{
+   await window.go.main.App.EnsureDeps();
+  }catch(err){
+   // Error (e.g. Linux ffmpeg) — wait so user can read the message
+   await new Promise(r=>setTimeout(r,2000));
+  }
+  window.runtime.EventsOff('dep_progress');
+  deps=await window.go.main.App.CheckDeps();
+ }
+
+ // Brief pause so user sees the ✓ confirms before launcher appears
+ await new Promise(r=>setTimeout(r,needDownload?600:400));
+ showScreen('launcher');
+ updateDepsBar(deps);
+})();
+
+// ===== NAVIGATION =====
+function showScreen(id){
+ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function setAccentColors(hex){
+ const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+ const s=document.documentElement.style;
+ s.setProperty('--accent',hex);
+ s.setProperty('--accent-rgb',r+','+g+','+b);
+ const lr=Math.min(255,r+Math.round((255-r)*0.45));
+ const lg=Math.min(255,g+Math.round((255-g)*0.45));
+ const lb=Math.min(255,b+Math.round((255-b)*0.45));
+ const light='rgb('+lr+','+lg+','+lb+')';
+ s.setProperty('--accent-light',light);
+ let ds=document.getElementById('dyn-accent');
+ if(!ds){ds=document.createElement('style');ds.id='dyn-accent';document.head.appendChild(ds)}
+ const rgb=r+','+g+','+b;
+ ds.textContent=
+  '.btn-login,.b-dl,.b-sel-dl,.modal-confirm{background:linear-gradient(135deg,'+hex+','+light+')!important}'+
+  '.card::before{background:radial-gradient(circle at 50% 0%,rgba('+rgb+',0.3) 0%,transparent 70%)!important}'+
+  '#platform-login input:focus{border-color:'+hex+'!important;box-shadow:0 0 0 3px rgba('+rgb+',0.07)!important}'+
+  '.search:focus{border-color:'+hex+'!important;box-shadow:0 0 0 3px rgba('+rgb+',0.07)!important}'+
+  '.item.downloaded-item{border-left:3px solid rgba('+rgb+',0.25)!important}'+
+  '.item.active-dl{border-left:3px solid '+hex+'!important;border-color:rgba('+rgb+',0.19)!important}'+
+  '.dl-badge{background:rgba('+rgb+',0.08)!important;color:'+hex+'!important;border:1px solid rgba('+rgb+',0.15)!important}'+
+  '.b-back:hover{background:'+hex+'!important;box-shadow:0 0 16px rgba('+rgb+',0.4)!important}'+
+  '.b-sel-all.active{background:rgba('+rgb+',0.08)!important;color:'+hex+'!important;border-color:rgba('+rgb+',0.25)!important}'+
+  '.minibar-fill{background:'+hex+'!important}'+
+  '.mini-dl-fill{background:'+hex+'!important}'+
+  '.mini-dl:hover{border-color:'+hex+'!important}';
+}
+
+async function selectPlatform(id,name,color){
+ activePlatform=id;platformName=name;accentColor=color;
+ loginStep='credentials';otpEmail='';
+ setAccentColors(color);
+
+ // Restore saved session if available
+ if(sessions[id]){
+  const s=sessions[id];
+  products=s.products;dl={...s.dl};selected=new Set(s.selected);
+  platformName=s.platformName;accentColor=s.accentColor;
+  try{await window.go.main.App.SelectPlatform(id)}catch(e){}
+  showScreen('platform-courses');
+  renderList();
+  restoreProgressUI();
+  return;
+ }
+ document.getElementById('login-title').textContent=name+' Downloader';
+
+ const emailEl=document.getElementById('email');
+ const passEl=document.getElementById('password');
+ const btn=document.getElementById('btn-login');
+ emailEl.value='';passEl.value='';
+ emailEl.style.display='';
+ passEl.type='password';
+ btn.disabled=false;
+ setStatus('','info');
+
+ if(id==='hotmart'){
+  emailEl.placeholder=t('token_label');
+  passEl.style.display='none';
+  btn.textContent=t('login');
+  document.getElementById('login-sub').textContent=t('token_hint');
+ }else if(id==='pluralsight'){
+  emailEl.placeholder=t('ps_cookie_label');
+  passEl.style.display='none';
+  btn.textContent=t('login');
+  document.getElementById('login-sub').textContent=t('ps_cookie_hint');
+ }else if(id==='masterclass'){
+  emailEl.placeholder=t('mc_cookie_label');
+  passEl.style.display='none';
+  btn.textContent=t('login');
+  document.getElementById('login-sub').textContent=t('mc_cookie_hint');
+ }else if(id==='thinkific'){
+  emailEl.placeholder=t('tk_url_label');
+  passEl.style.display='none';
+  btn.textContent=t('login');
+  document.getElementById('login-sub').textContent=t('tk_url_hint');
+ }else if(id==='teachable'||id==='kajabi'){
+  emailEl.placeholder='Email';
+  passEl.style.display='none';
+  btn.textContent=t('send_otp');
+  document.getElementById('login-sub').textContent=t('subtitle');
+ }else{
+  emailEl.placeholder='Email';
+  passEl.style.display='';
+  passEl.placeholder=t('password');
+  btn.textContent=t('login');
+  document.getElementById('login-sub').textContent=t('subtitle');
+ }
+
+ showScreen('platform-login');
+ try{
+  const r=await window.go.main.App.SelectPlatform(id);
+  document.getElementById('folder-path').textContent=r.folder||'...';
+ }catch(e){}
+
+ // Kajabi: try restoring saved session
+ if(id==='kajabi'||id==='thinkific'){
+  btn.disabled=true;
+  setStatus(t('restoring'),'info',true);
+  try{
+   const result=await window.go.main.App.Login('','');
+   if(result.success){
+    setStatus(t('loading_courses'),'info',true);
+    await loadCoursesAndShow(result);
+    return;
+   }
+  }catch(e){}
+  btn.disabled=false;
+  setStatus('','info');
+ }
+}
+
+function goBackFromCourses(){
+ const ownDl=(dlPlatform===activePlatform)?{...dl}:{index:-1,status:'idle'};
+ if(products.length>0){
+  sessions[activePlatform]={products,dl:ownDl,selected:new Set(selected),platformName,accentColor};
+ }else{
+  delete sessions[activePlatform];
+ }
+ activePlatform='';products=[];selected.clear();dl={index:-1,status:'idle'};
+ loginStep='credentials';otpEmail='';
+ showScreen('launcher');
+ updateMiniDl();
+}
+function updateMiniDl(){
+ const mini=document.getElementById('mini-dl');
+ if(!dlPlatform||!sessions[dlPlatform]||!batchRunning){
+  mini.classList.remove('visible');return;
+ }
+ const s=sessions[dlPlatform];
+ const color=platformColors[dlPlatform]||'#4ade80';
+ mini.style.setProperty('--mini-accent',color);
+ const icon=document.getElementById('mini-dl-icon');
+ const img=platformImages[dlPlatform];
+ if(img){icon.src=img;icon.style.display=''}else{icon.style.display='none'}
+ document.getElementById('mini-dl-name').textContent=s.platformName+' - '+s.dl.file;
+ document.getElementById('mini-dl-detail').textContent=(s.dl.current||0)+'/'+s.dl.total;
+ const fill=document.getElementById('mini-dl-fill');
+ fill.style.width=Math.min(s.dl.pct||0,100)+'%';
+ fill.style.background=color;
+ const onLauncher=document.getElementById('launcher').classList.contains('active');
+ if(onLauncher)mini.classList.add('visible');
+ else mini.classList.remove('visible');
+}
+function resumeFromMini(){
+ if(!dlPlatform||!sessions[dlPlatform])return;
+ selectPlatform(dlPlatform,sessions[dlPlatform].platformName,sessions[dlPlatform].accentColor);
+}
+async function goBack(){
+ activePlatform='';products=[];selected.clear();dl={index:-1,status:'idle'};
+ loginStep='credentials';otpEmail='';
+ showScreen('launcher');
+ document.getElementById('email').value='';
+ document.getElementById('email').style.display='';
+ document.getElementById('password').value='';
+ document.getElementById('password').style.display='';
+ document.getElementById('password').type='password';
+ setStatus('','info');
+ document.getElementById('btn-login').disabled=false;
+ document.getElementById('btn-login').textContent=t('login');
+ updateMiniDl();
+}
+
+// ===== LOGIN =====
+async function doLogin(){
+ const emailEl=document.getElementById('email');
+ const passEl=document.getElementById('password');
+ const btn=document.getElementById('btn-login');
+ let loginEmail='',loginPass='';
+
+ if(activePlatform==='hotmart'||activePlatform==='pluralsight'||activePlatform==='masterclass'){
+  loginEmail=emailEl.value.trim();
+  if(!loginEmail)return;
+  loginPass='';
+ }else if(activePlatform==='thinkific'){
+  loginEmail=emailEl.value.trim();
+  loginPass='';
+  if(!loginEmail)return;
+ }else if(activePlatform==='teachable'||activePlatform==='kajabi'){
+  if(loginStep==='credentials'){
+   loginEmail=emailEl.value.trim();
+   if(!loginEmail)return;
+   loginPass='';
+  }else{
+   loginEmail='';
+   loginPass=passEl.value.trim();
+   if(!loginPass)return;
+  }
+ }else{
+  loginEmail=emailEl.value.trim();
+  loginPass=passEl.value.trim();
+  if(!loginEmail||!loginPass)return;
+ }
+
+ btn.disabled=true;
+ btn.innerHTML='<span class="spinner"></span>'+esc(t('authenticating'));
+ setStatus('','info');
+
+ try{
+  const result=await window.go.main.App.Login(loginEmail,loginPass);
+
+  if(result.otp_sent){
+   loginStep='otp';
+   otpEmail=emailEl.value.trim();
+   emailEl.style.display='none';
+   passEl.style.display='';
+   passEl.type='text';
+   passEl.placeholder=t('otp_code');
+   passEl.value='';
+   passEl.focus();
+   btn.disabled=false;
+   btn.textContent=t('verify_otp');
+   setStatus(t('otp_sent_msg'),'info');
+   return;
+  }
+
+  if(result.success){
+   btn.innerHTML='&#10003; '+esc(t('authenticating').replace('...',''));
+   setStatus('','info');
+   await new Promise(r=>setTimeout(r,400));
+   await loadCoursesAndShow(result);
+  }else{
+   setStatus(result.error||t('auth_fail'),'err');
+   btn.disabled=false;
+   btn.textContent=loginStep==='otp'?t('verify_otp'):
+    activePlatform==='hotmart'?t('login'):
+    activePlatform==='thinkific'?t('login'):
+    (activePlatform==='teachable'||activePlatform==='kajabi')?t('send_otp'):t('login');
+  }
+ }catch(err){
+  setStatus(t('auth_fail'),'err');
+  btn.disabled=false;
+  btn.textContent=t('login');
+ }
+}
+
+async function loadCoursesAndShow(loginResult){
+ const btn=document.getElementById('btn-login');
+ if(loginResult.subgroups&&loginResult.subgroups.length>0){
+  btn.disabled=false;
+  btn.textContent=t('login');
+  showSubgroupPicker(loginResult.subgroups);
+  return;
+ }
+ btn.innerHTML='<span class="spinner"></span>'+esc(t('loading_courses'));
+ setStatus('','info');
+ const courses=await window.go.main.App.GetCourses();
+ products=(courses||[]).map((c,i)=>({...c,oi:i}));
+ showScreen('platform-courses');
+ renderList();
+}
+
+function showSubgroupPicker(subgroups){
+ const dlg=document.getElementById('dlg-subgroup');
+ const title=document.getElementById('dlg-sg-title');
+ const list=document.getElementById('dlg-sg-list');
+ title.textContent=t('select_subgroup');
+ list.innerHTML='';
+ subgroups.forEach((sg,i)=>{
+  const btn=document.createElement('button');
+  btn.className='sg-item';
+  let html='';
+  if(sg.image)html+='<img class="sg-img" src="'+esc(sg.image)+'" onerror="this.style.display=\'none\'">';
+  html+='<span class="sg-name">'+esc(sg.name||'#'+(i+1))+'</span>';
+  btn.innerHTML=html;
+  btn.onclick=async()=>{
+   dlg.close();
+   try{await window.go.main.App.SelectSubgroup(i)}catch(e){}
+   setStatus(t('loading_courses'),'info',true);
+   const courses=await window.go.main.App.GetCourses();
+   products=(courses||[]).map((c,ci)=>({...c,oi:ci}));
+   showScreen('platform-courses');
+   renderList();
+  };
+  list.appendChild(btn);
+ });
+ dlg.showModal();
+}
+function setStatus(txt,c,loading){
+ const el=document.getElementById('status');
+ if(loading)el.innerHTML='<span class="spinner"></span>'+esc(txt);
+ else el.textContent=txt;
+ el.className='status st-'+(c||'info');
+}
+document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+document.getElementById('email').addEventListener('keydown',e=>{
+ if(e.key==='Enter'){
+  e.preventDefault();
+  if(activePlatform==='hotmart'||activePlatform==='pluralsight'||activePlatform==='masterclass'||activePlatform==='teachable'||activePlatform==='kajabi'){
+   doLogin();
+  }else if(activePlatform==='thinkific'){
+   document.getElementById('password').focus();
+  }else{
+   document.getElementById('password').focus();
+  }
+ }
+});
+
+// ===== COURSE LIST =====
+function imgError(el){
+ const d=document.createElement('div');d.className='no-thumb';
+ d.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>';
+ el.replaceWith(d);
+}
+function renderList(){
+ const el=document.getElementById('list');el.innerHTML='';
+ selected.clear();
+ const selBtn=document.getElementById('btn-sel-all');
+ if(selBtn)selBtn.classList.remove('active');
+ if(!products.length){
+  el.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg><p>'+esc(t('no_products'))+'</p></div>';
+  if(selBtn)selBtn.style.display='none';updateSelBar();return;
+ }
+ if(selBtn)selBtn.style.display='inline-flex';
+ const dlCount=products.filter(p=>p.dl_status==='complete').length;
+ const partialCount=products.filter(p=>p.dl_status==='partial').length;
+ let headerExtra='';
+ if(dlCount)headerExtra+=' <span class="header-sub">&middot; '+dlCount+' '+t('x_downloaded')+'</span>';
+ if(partialCount)headerExtra+=' <span class="header-sub">&middot; '+partialCount+' '+t('incomplete')+'</span>';
+ document.getElementById('title').innerHTML=esc(t('your_courses'))+' ('+products.length+')'+headerExtra;
+ products.forEach((p,vi)=>{
+  const oi=p.oi;
+  const d=document.createElement('div');
+  d.className='item'+(p.dl_status==='complete'?' downloaded-item':p.dl_status==='partial'?' partial-item':'');
+  d.id='c'+oi;d.setAttribute('role','listitem');
+  d.style.animationDelay=Math.min(vi*30,300)+'ms';
+  const icon=p.preview_url
+   ?'<img class="thumb" src="'+esc(p.preview_url)+'" onerror="imgError(this)" loading="lazy">'
+   :'<div class="no-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>';
+  const badge=p.dl_status==='complete'?' <span class="badge-done">&#10003; '+t('downloaded')+'</span>'
+   :p.dl_status==='partial'?' <span class="badge-partial">&#9888; '+t('incomplete')+'</span>':'';
+  const datePart=p.date?esc(p.date)+' &middot; ':'';
+  d.innerHTML=
+   '<input type="checkbox" class="sel-check" data-oi="'+oi+'" onchange="toggleSel('+oi+',this.checked)">'+
+   icon+
+   '<div class="info">'+
+    '<div class="name" title="'+esc(p.name)+'">'+esc(p.name)+'</div>'+
+    '<div class="meta">'+datePart+t('course')+badge+'</div>'+
+    '<div class="prog-area" id="pa'+oi+'"><div class="minibar"><div class="minibar-fill" id="bf'+oi+'"></div></div>'+
+    '<div class="prog-text" id="pt'+oi+'"></div></div>'+
+   '</div>'+
+   '<div class="acts" id="ac'+oi+'"></div>';
+  el.appendChild(d);
+ });
+ updateAll();updateSelBar();restoreProgressUI();
+}
+function restoreProgressUI(){
+ if(dl.index<0)return;
+ const item=document.getElementById('c'+dl.index);
+ if(dl.status==='downloading'){
+  if(item){item.classList.add('active-dl');item.classList.remove('downloaded-item','partial-item')}
+  const pa=document.getElementById('pa'+dl.index);if(pa)pa.classList.add('visible');
+  const bf=document.getElementById('bf'+dl.index);
+  if(bf){bf.style.width=Math.min(dl.pct||0,100)+'%';bf.className='minibar-fill'}
+  const pt=document.getElementById('pt'+dl.index);
+  if(pt)pt.textContent=(dl.current||0)+'/'+dl.total+' - '+(dl.file||'');
+ }
+ updateAll();
+}
+function filterList(){
+ const q=document.getElementById('search-input').value.trim().toLowerCase();
+ const noRes=document.getElementById('no-results');
+ let visible=0;
+ products.forEach(p=>{
+  const el=document.getElementById('c'+p.oi);
+  if(!el)return;
+  const match=!q||p.name.toLowerCase().includes(q);
+  el.style.display=match?'flex':'none';
+  if(match)visible++;
+ });
+ noRes.style.display=visible===0&&products.length>0?'block':'none';
+ noRes.textContent=t('no_results');
+}
+
+// ===== SELECTION =====
+function toggleSel(oi,checked){
+ if(checked)selected.add(oi);else selected.delete(oi);
+ const btn=document.getElementById('btn-sel-all');
+ const allSel=selected.size===products.length&&products.length>0;
+ if(btn)btn.classList.toggle('active',allSel);
+ document.getElementById('sel-all-label').textContent=allSel?t('deselect_all'):t('select_all');
+ updateSelBar();
+}
+function toggleSelectAll(){
+ const allSelected=selected.size===products.length&&products.length>0;
+ const newState=!allSelected;
+ products.forEach(p=>{
+  const cb=document.querySelector('#c'+p.oi+' .sel-check');
+  if(cb)cb.checked=newState;
+  if(newState)selected.add(p.oi);else selected.delete(p.oi);
+ });
+ const btn=document.getElementById('btn-sel-all');
+ if(btn)btn.classList.toggle('active',newState);
+ document.getElementById('sel-all-label').textContent=newState?t('deselect_all'):t('select_all');
+ updateSelBar();
+}
+function clearSelection(){
+ selected.clear();
+ document.querySelectorAll('.sel-check').forEach(cb=>cb.checked=false);
+ const btn=document.getElementById('btn-sel-all');
+ if(btn)btn.classList.remove('active');
+ document.getElementById('sel-all-label').textContent=t('select_all');
+ updateSelBar();
+}
+function updateSelBar(){
+ const bar=document.getElementById('sel-bar');
+ const back=document.querySelector('#platform-courses .b-back');
+ const dlBtn=document.getElementById('btn-sel-dl');
+ const clearBtn=document.getElementById('btn-sel-clear');
+ if(batchRunning&&batchCount>1&&dlPlatform===activePlatform){
+  bar.classList.add('visible');
+  document.getElementById('sel-count').textContent=t('download')+'...';
+  dlBtn.textContent=t('cancel');
+  dlBtn.onclick=function(){doCancel();};
+  if(clearBtn)clearBtn.style.display='none';
+  if(back)back.style.bottom='70px';
+ }else if(selected.size>0&&!batchRunning){
+  bar.classList.add('visible');
+  document.getElementById('sel-count').textContent=selected.size+' '+t('x_selected');
+  dlBtn.textContent=t('download_sel')+' ('+selected.size+')';
+  dlBtn.onclick=function(){confirmBatchDownload();};
+  if(clearBtn)clearBtn.style.display='';
+  if(back)back.style.bottom='70px';
+ }else{
+  bar.classList.remove('visible');
+  dlBtn.onclick=function(){confirmBatchDownload();};
+  if(clearBtn)clearBtn.style.display='';
+  if(back)back.style.bottom='';
+ }
+}
+
+// ===== ACTIONS =====
+function updateAll(){
+ const ownDl=dlPlatform===activePlatform;
+ products.forEach(p=>{
+  const ac=document.getElementById('ac'+p.oi);
+  if(!ac)return;
+  if(ownDl&&dl.index===p.oi&&dl.status==='downloading'){
+   ac.innerHTML='<button class="b b-cancel" onclick="doCancel()">'+t('cancel')+'</button>';
+  }else if(p.dl_status==='complete'){
+   ac.innerHTML='<button class="b b-open" onclick="openCourseFolder('+p.oi+')">'+t('open_folder')+'</button>'+
+    '<button class="b b-dl" onclick="redownloadCourse('+p.oi+')">'+t('download_again')+'</button>'+
+    '<button class="b b-cancel" onclick="deleteCourse('+p.oi+')">'+t('delete_course')+'</button>';
+  }else if(p.dl_status==='partial'){
+   ac.innerHTML='<button class="b b-open" onclick="openCourseFolder('+p.oi+')">'+t('open_folder')+'</button>'+
+    '<button class="b b-dl" onclick="startDownload('+p.oi+')">'+t('continue_dl')+'</button>'+
+    '<button class="b b-cancel" onclick="deleteCourse('+p.oi+')">'+t('delete_course')+'</button>';
+  }else{
+   ac.innerHTML='<button class="b b-dl" onclick="startDownload('+p.oi+')">'+t('download')+'</button>';
+  }
+ });
+}
+
+let pendingDlIndices=null;
+function showConflictDlg(indices){
+ pendingDlIndices=indices;
+ const dlpName=sessions[dlPlatform]?sessions[dlPlatform].platformName:dlPlatform;
+ document.getElementById('dlg-conflict-title').textContent=t('dl_conflict_title');
+ document.getElementById('dlg-conflict-msg').textContent=t('dl_conflict_msg').replace('%s',dlpName);
+ document.getElementById('dlg-conflict').querySelector('.modal-cancel').textContent=t('wait');
+ document.getElementById('dlg-conflict').querySelector('.modal-confirm').textContent=t('cancel_and_start');
+ document.getElementById('dlg-conflict').showModal();
+}
+function closeConflictDlg(){document.getElementById('dlg-conflict').close();pendingDlIndices=null}
+async function cancelAndStartNew(){
+ document.getElementById('dlg-conflict').close();
+ const indices=pendingDlIndices;pendingDlIndices=null;
+ if(!indices||!indices.length)return;
+ const oldDlPlatform=dlPlatform;
+ await window.go.main.App.Cancel();
+ if(oldDlPlatform&&sessions[oldDlPlatform])sessions[oldDlPlatform].dl={index:-1,status:'idle'};
+ // Wait for old download goroutine to finish (max 10s safety timeout)
+ const t0=Date.now();
+ await new Promise(r=>{
+  const check=()=>{if(!batchRunning||Date.now()-t0>10000){r()}else{setTimeout(check,80)}};
+  setTimeout(check,80);
+ });
+ // Ensure Go side has correct platform before starting download
+ dlPlatform=activePlatform;
+ try{await window.go.main.App.SelectPlatform(activePlatform)}catch(e){}
+ window.go.main.App.Download(indices);
+}
+function startDownload(oi){
+ if(batchRunning){showConflictDlg([oi]);return}
+ dlPlatform=activePlatform;
+ window.go.main.App.Download([oi]);
+}
+function downloadSelected(){
+ if(!selected.size)return;
+ if(batchRunning){showConflictDlg([...selected]);return}
+ dlPlatform=activePlatform;
+ window.go.main.App.Download([...selected].sort((a,b)=>a-b));
+}
+function confirmBatchDownload(){
+ if(selected.size<=1){downloadSelected();return}
+ if(batchRunning){showConflictDlg([...selected]);return}
+ document.getElementById('dlg-title').textContent=t('warn_title');
+ document.getElementById('dlg-msg').textContent=t('warn_batch');
+ document.querySelector('#dlg-batch .modal-cancel').textContent=t('btn_cancel');
+ document.querySelector('#dlg-batch .modal-confirm').textContent=t('confirm');
+ document.getElementById('dlg-batch').showModal();
+}
+function closeDlg(){document.getElementById('dlg-batch').close()}
+function confirmDl(){closeDlg();downloadSelected()}
+
+function doCancel(){window.go.main.App.Cancel()}
+let _confirmResolve=null;
+function showConfirmDlg(title,msg,btnText,btnStyle){
+ const dlg=document.getElementById('dlg-confirm');
+ // Close if already open to avoid InvalidStateError
+ if(dlg.open)dlg.close();
+ if(_confirmResolve){_confirmResolve(false);_confirmResolve=null}
+ document.getElementById('dlg-confirm-title').textContent=title;
+ document.getElementById('dlg-confirm-msg').textContent=msg;
+ const cb=document.getElementById('dlg-confirm-btn');
+ cb.textContent=btnText;
+ cb.style.background=btnStyle||'';
+ document.querySelector('#dlg-confirm .modal-cancel').textContent=t('cancel');
+ dlg.showModal();
+ return new Promise(r=>{_confirmResolve=r});
+}
+function resolveConfirmDlg(val){
+ document.getElementById('dlg-confirm').close();
+ if(_confirmResolve)_confirmResolve(val);
+ _confirmResolve=null;
+}
+async function deleteCourse(oi){
+ try{
+  const ok=await showConfirmDlg(t('warn_title'),t('confirm_delete'),t('delete_course'),'#ff6b6b');
+  if(!ok)return;
+  await window.go.main.App.SelectPlatform(activePlatform);
+  const res=await window.go.main.App.DeleteCourse(oi);
+  if(res.success){
+   const p=products.find(x=>x.oi===oi);
+   if(p){p.dl_status='none';p.downloaded=false}
+   renderList();
+  }else{
+   await showConfirmDlg(t('warn_title'),t('delete_error'),'OK','#ff6b6b');
+  }
+ }catch(e){await showConfirmDlg(t('warn_title'),t('delete_error'),'OK','#ff6b6b')}
+}
+async function redownloadCourse(oi){
+ try{
+  const ok=await showConfirmDlg(t('warn_title'),t('confirm_redownload'),t('download_again'));
+  if(!ok)return;
+  await window.go.main.App.SelectPlatform(activePlatform);
+  const res=await window.go.main.App.DeleteCourse(oi);
+  if(res.success){
+   const p=products.find(x=>x.oi===oi);
+   if(p){p.dl_status='none';p.downloaded=false}
+   startDownload(oi);
+  }else{
+   await showConfirmDlg(t('warn_title'),t('delete_error'),'OK','#ff6b6b');
+  }
+ }catch(e){await showConfirmDlg(t('warn_title'),t('delete_error'),'OK','#ff6b6b')}
+}
+
+async function pickFolder(){
+ try{
+  const dir=await window.go.main.App.PickFolder();
+  document.getElementById('folder-path').textContent=dir;
+ }catch(e){}
+}
+function openCourseFolder(oi){window.go.main.App.OpenCourseFolder(oi)}
+async function doLogout(){
+ if(batchRunning)return;
+ try{await window.go.main.App.Logout()}catch(e){}
+ delete sessions[activePlatform];
+ products=[];selected.clear();dl={index:-1,status:'idle'};
+ loginStep='credentials';otpEmail='';
+ showScreen('platform-login');
+ document.getElementById('email').value='';
+ document.getElementById('email').style.display='';
+ document.getElementById('password').value='';
+ document.getElementById('password').type='password';
+ setStatus('','info');
+ document.getElementById('btn-login').disabled=false;
+ // Re-configure login screen for current platform
+ if(activePlatform==='hotmart'){
+  document.getElementById('email').placeholder=t('token_label');
+  document.getElementById('password').style.display='none';
+  document.getElementById('btn-login').textContent=t('login');
+  document.getElementById('login-sub').textContent=t('token_hint');
+ }else if(activePlatform==='pluralsight'){
+  document.getElementById('email').placeholder=t('ps_cookie_label');
+  document.getElementById('password').style.display='none';
+  document.getElementById('btn-login').textContent=t('login');
+  document.getElementById('login-sub').textContent=t('ps_cookie_hint');
+ }else if(activePlatform==='masterclass'){
+  document.getElementById('email').placeholder=t('mc_cookie_label');
+  document.getElementById('password').style.display='none';
+  document.getElementById('btn-login').textContent=t('login');
+  document.getElementById('login-sub').textContent=t('mc_cookie_hint');
+ }else if(activePlatform==='thinkific'){
+  document.getElementById('email').placeholder=t('tk_url_label');
+  document.getElementById('password').style.display='none';
+  document.getElementById('btn-login').textContent=t('login');
+  document.getElementById('login-sub').textContent=t('tk_url_hint');
+ }else if(activePlatform==='teachable'||activePlatform==='kajabi'){
+  document.getElementById('email').placeholder='Email';
+  document.getElementById('password').style.display='none';
+  document.getElementById('btn-login').textContent=t('send_otp');
+  document.getElementById('login-sub').textContent=t('subtitle');
+ }else{
+  document.getElementById('email').placeholder='Email';
+  document.getElementById('password').style.display='';
+  document.getElementById('password').placeholder=t('password');
+  document.getElementById('btn-login').textContent=t('login');
+  document.getElementById('login-sub').textContent=t('subtitle');
+ }
+}
+
+// ===== EVENTS FROM GO =====
+function syncDlToSession(){
+ if(dlPlatform&&sessions[dlPlatform]){
+  sessions[dlPlatform].dl={...dl};
+  updateMiniDl();
+ }
+}
+
+window.runtime.EventsOn('dl_started',(data)=>{
+ dl={index:data.index,status:'downloading',folder:data.folder,current:0,total:0,pct:0,file:''};
+ batchRunning=true;
+ if(activePlatform===dlPlatform){
+  const item=document.getElementById('c'+data.index);
+  if(item){item.classList.add('active-dl');item.classList.remove('downloaded-item','partial-item')}
+  const pa=document.getElementById('pa'+data.index);if(pa)pa.classList.add('visible');
+  updateAll();
+ }
+ syncDlToSession();
+});
+
+window.runtime.EventsOn('dl_progress',(data)=>{
+ const filePct=data.percent||0;
+ const overallPct=data.total>0?((Math.max(data.current-1,0)+(filePct/100))/data.total)*100:filePct;
+ dl.index=data.index;dl.current=data.current;dl.total=data.total;
+ dl.pct=overallPct;dl.file=data.filename;dl.status='downloading';
+ if(activePlatform===dlPlatform){
+  const bf=document.getElementById('bf'+data.index);
+  const pt=document.getElementById('pt'+data.index);
+  if(bf){bf.style.width=Math.min(overallPct,100)+'%';bf.className='minibar-fill'}
+  if(pt)pt.textContent=(data.current||0)+'/'+data.total+' - '+data.filename;
+ }
+ syncDlToSession();
+});
+
+window.runtime.EventsOn('dl_complete',(data)=>{
+ dl.status='idle';
+ if(activePlatform===dlPlatform){
+  const item=document.getElementById('c'+data.index);
+  if(item){
+   item.classList.remove('active-dl','partial-item');item.classList.add('downloaded-item');
+   const old=item.querySelector('.badge-partial');
+   if(old)old.outerHTML='<span class="badge-done">&#10003; '+t('downloaded')+'</span>';
+   else if(!item.querySelector('.badge-done')){
+    const meta=item.querySelector('.meta');
+    if(meta)meta.insertAdjacentHTML('beforeend',' <span class="badge-done">&#10003; '+t('downloaded')+'</span>');
+   }
+  }
+  const bf=document.getElementById('bf'+data.index);if(bf){bf.style.width='100%';bf.className='minibar-fill done'}
+  const pt=document.getElementById('pt'+data.index);if(pt)pt.textContent=t('complete');
+  const p=products.find(x=>x.oi===data.index);if(p){p.downloaded=true;p.dl_status='complete'}
+  updateAll();
+ }
+ if(dlPlatform&&sessions[dlPlatform]){
+  const sp=sessions[dlPlatform].products.find(x=>x.oi===data.index);if(sp){sp.downloaded=true;sp.dl_status='complete'}
+ }
+ syncDlToSession();
+});
+
+window.runtime.EventsOn('dl_error',(data)=>{
+ dl.status='idle';
+ if(activePlatform===dlPlatform){
+  const item=document.getElementById('c'+data.index);if(item)item.classList.remove('active-dl');
+  const bf=document.getElementById('bf'+data.index);if(bf){bf.style.width='100%';bf.className='minibar-fill cancelled'}
+  const pt=document.getElementById('pt'+data.index);if(pt)pt.textContent=data.message||'Error';
+  updateAll();
+ }
+ syncDlToSession();
+});
+
+window.runtime.EventsOn('dl_cancelled',(data)=>{
+ dl.status='idle';
+ if(activePlatform===dlPlatform){
+  const item=document.getElementById('c'+data.index);if(item){item.classList.remove('active-dl');item.classList.add('partial-item')}
+  const bf=document.getElementById('bf'+data.index);if(bf){bf.style.width='100%';bf.className='minibar-fill cancelled'}
+  const pt=document.getElementById('pt'+data.index);if(pt)pt.textContent=t('cancelled');
+  const p=products.find(x=>x.oi===data.index);if(p){p.dl_status='partial';p.downloaded=true}
+  updateAll();
+ }
+ syncDlToSession();
+});
+
+
+window.runtime.EventsOn('batch_started',(data)=>{batchRunning=true;batchCount=data.count||1;syncDlToSession();updateSelBar()});
+window.runtime.EventsOn('batch_progress',(data)=>{});
+window.runtime.EventsOn('batch_done',(data)=>{
+ batchRunning=false;batchCount=0;dl.status='idle';
+ updateSelBar();
+ if(activePlatform===dlPlatform)updateAll();
+ if(dlPlatform&&sessions[dlPlatform])sessions[dlPlatform].dl={index:-1,status:'idle'};
+ dlPlatform='';updateMiniDl();
+});
+window.runtime.EventsOn('folder_set',(data)=>{
+ document.getElementById('folder-path').textContent=data.folder;
+});
+</script>
+</body>
+</html>
