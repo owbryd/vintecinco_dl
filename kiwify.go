@@ -241,11 +241,19 @@ func (a *App) kiwifyGetCourses() []map[string]interface{} {
 // point directly to downloadable content; instead, we need to discover
 // the real course ID(s) inside the club.
 
-// kiwifyFindRealCourseID resolves a public course ID to the actual
-// content ID. First checks if the ID already has sections/modules.
-// If not, queries club API endpoints to find nested course IDs.
-func (a *App) kiwifyFindRealCourseID(publicID string) string {
+// kiwifyClubCourse is a real course found inside a club. Name may be empty
+// when the club API does not expose it.
+type kiwifyClubCourse struct {
+	ID   string
+	Name string
+}
+
+// kiwifyFindRealCourseIDs resolves a public course ID to every actual
+// content ID. A club can bundle several courses, so all of them are returned.
+// The public ID itself is included first when it has downloadable content.
+func (a *App) kiwifyFindRealCourseIDs(publicID string) []kiwifyClubCourse {
 	hdrs := a.kiwifyAPIHeaders()
+	var result []kiwifyClubCourse
 
 	// Method 1: Check if public ID already has downloadable content
 	data, status, err := httpGetJSON(kiwifyBaseAPI+"/courses/"+publicID+"/sections", hdrs)
@@ -256,7 +264,7 @@ func (a *App) kiwifyFindRealCourseID(publicID string) string {
 				modules := jsonArray(courseData, "modules")
 				sections := jsonArray(courseData, "sections")
 				if len(modules) > 0 || len(sections) > 0 {
-					return publicID
+					result = append(result, kiwifyClubCourse{ID: publicID})
 				}
 			}
 		}
@@ -286,7 +294,7 @@ func (a *App) kiwifyFindRealCourseID(publicID string) string {
 			continue
 		}
 
-		var ids []string
+		var ids []kiwifyClubCourse
 
 		// The club API can return course IDs in several different structures
 		// depending on the club type. We try all known patterns.
@@ -304,14 +312,14 @@ func (a *App) kiwifyFindRealCourseID(publicID string) string {
 						for _, item := range jsonArray(sm, "items") {
 							im, _ := item.(map[string]interface{})
 							if id := jsonStr(im, "id"); id != "" {
-								ids = append(ids, id)
+								ids = append(ids, kiwifyClubCourse{id, kiwifyName(im)})
 							}
 						}
 					} else if stype == "modules" {
 						for _, item := range jsonArray(sm, "items") {
 							im, _ := item.(map[string]interface{})
 							if id := jsonStr(im, "course_id"); id != "" {
-								ids = append(ids, id)
+								ids = append(ids, kiwifyClubCourse{ID: id})
 							}
 						}
 					}
@@ -320,12 +328,12 @@ func (a *App) kiwifyFindRealCourseID(publicID string) string {
 			for _, c := range jsonArray(d, "courses") {
 				cm, _ := c.(map[string]interface{})
 				if id := jsonStr(cm, "id"); id != "" {
-					ids = append(ids, id)
+					ids = append(ids, kiwifyClubCourse{id, kiwifyName(cm)})
 				}
 			}
 			if allCourses := jsonMap(d, "all_courses"); allCourses != nil {
 				for k := range allCourses {
-					ids = append(ids, k)
+					ids = append(ids, kiwifyClubCourse{ID: k})
 				}
 			}
 		}
@@ -334,7 +342,7 @@ func (a *App) kiwifyFindRealCourseID(publicID string) string {
 		for _, c := range jsonArray(parsed, "courses") {
 			cm, _ := c.(map[string]interface{})
 			if id := jsonStr(cm, "id"); id != "" {
-				ids = append(ids, id)
+				ids = append(ids, kiwifyClubCourse{id, kiwifyName(cm)})
 			}
 		}
 
@@ -343,7 +351,7 @@ func (a *App) kiwifyFindRealCourseID(publicID string) string {
 			for _, c := range jsonArray(club, "courses") {
 				cm, _ := c.(map[string]interface{})
 				if id := jsonStr(cm, "id"); id != "" {
-					ids = append(ids, id)
+					ids = append(ids, kiwifyClubCourse{id, kiwifyName(cm)})
 				}
 			}
 		}
@@ -357,33 +365,43 @@ func (a *App) kiwifyFindRealCourseID(publicID string) string {
 			for _, c := range jsonArray(pm, "courses") {
 				cm, _ := c.(map[string]interface{})
 				if id := jsonStr(cm, "id"); id != "" {
-					ids = append(ids, id)
+					ids = append(ids, kiwifyClubCourse{id, kiwifyName(cm)})
 				}
 			}
 			for _, m := range jsonArray(pm, "modules") {
 				mm, _ := m.(map[string]interface{})
 				if id := jsonStr(mm, "course_id"); id != "" {
-					ids = append(ids, id)
+					ids = append(ids, kiwifyClubCourse{ID: id})
 				}
 			}
 		}
 
-		// Deduplicate and return first found ID
-		seen := map[string]bool{}
-		var unique []string
-		for _, id := range ids {
-			if !seen[id] {
-				seen[id] = true
-				unique = append(unique, id)
+		// Merge into result, deduplicating by ID (keep a name if one shows up later)
+		for _, c := range ids {
+			found := false
+			for i := range result {
+				if result[i].ID == c.ID {
+					if result[i].Name == "" {
+						result[i].Name = c.Name
+					}
+					found = true
+					break
+				}
+			}
+			if !found {
+				result = append(result, c)
 			}
 		}
 
-		if len(unique) > 0 {
-			return unique[0]
+		if len(ids) > 0 {
+			break
 		}
 	}
 
-	return publicID
+	if len(result) == 0 {
+		return []kiwifyClubCourse{{ID: publicID}}
+	}
+	return result
 }
 
 // --- File Download ---
@@ -810,9 +828,67 @@ func (a *App) kiwifyDownloadOneAttempt(index int) (ok bool, retryable bool) {
 		"index": index, "folder": courseDir,
 	})
 
-	// Resolve the real course ID (handles club-wrapped courses)
-	realID := a.kiwifyFindRealCourseID(courseID)
+	// Resolve the real course IDs (a club can wrap several courses)
+	clubCourses := a.kiwifyFindRealCourseIDs(courseID)
 
+	downloaded := 0
+	for ci, cc := range clubCourses {
+		dir := courseDir
+		if len(clubCourses) > 1 {
+			if cc.Name == "" {
+				cc.Name = a.kiwifyCourseName(cc.ID)
+			}
+			name := sanitizeFilename(cc.Name)
+			if name == "" {
+				name = cc.ID
+			}
+			dir = filepath.Join(courseDir, fmt.Sprintf("%02d - %s", ci+1, name))
+			os.MkdirAll(dir, 0755)
+		}
+		ok, retry, empty := a.kiwifyDownloadRealCourse(index, cc.ID, dir)
+		if empty {
+			if len(clubCourses) > 1 {
+				os.Remove(dir)
+			}
+			continue
+		}
+		if !ok {
+			return false, retry
+		}
+		downloaded++
+	}
+	if downloaded == 0 {
+		a.emit("dl_error", map[string]interface{}{
+			"index": index, "message": "Course has no content.",
+		})
+		return false, false
+	}
+
+	markCourseComplete(courseDir)
+	a.emit("dl_complete", map[string]interface{}{
+		"index": index, "folder": courseDir,
+	})
+	return true, false
+}
+
+// kiwifyCourseName fetches a course's display name from its sections
+// endpoint. Returns "" if it cannot be determined.
+func (a *App) kiwifyCourseName(id string) string {
+	data, status, err := httpGetJSON(kiwifyBaseAPI+"/courses/"+id+"/sections", a.kiwifyAPIHeaders())
+	if err != nil || status != 200 {
+		return ""
+	}
+	var parsed map[string]interface{}
+	if json.Unmarshal(data, &parsed) != nil {
+		return ""
+	}
+	return kiwifyName(jsonMap(parsed, "course"))
+}
+
+// kiwifyDownloadRealCourse downloads the sections/modules/lessons of one
+// real course (by content ID) into courseDir.
+// empty is true when the ID has no sections/modules (caller decides what to do).
+func (a *App) kiwifyDownloadRealCourse(index int, realID, courseDir string) (ok, retryable, empty bool) {
 	// Fetch course structure (sections + modules + lessons)
 	hdrs := a.kiwifyAPIHeaders()
 	data, _, err := httpGetJSON(kiwifyBaseAPI+"/courses/"+realID+"/sections", hdrs)
@@ -820,7 +896,7 @@ func (a *App) kiwifyDownloadOneAttempt(index int) (ok bool, retryable bool) {
 		a.emit("dl_error", map[string]interface{}{
 			"index": index, "message": "Failed to retrieve course data.",
 		})
-		return false, true
+		return false, true, false
 	}
 
 	var parsed map[string]interface{}
@@ -828,7 +904,7 @@ func (a *App) kiwifyDownloadOneAttempt(index int) (ok bool, retryable bool) {
 		a.emit("dl_error", map[string]interface{}{
 			"index": index, "message": "Failed to parse course data.",
 		})
-		return false, true
+		return false, true, false
 	}
 
 	courseData := jsonMap(parsed, "course")
@@ -836,10 +912,7 @@ func (a *App) kiwifyDownloadOneAttempt(index int) (ok bool, retryable bool) {
 	modules := jsonArray(courseData, "modules")
 
 	if len(sections) == 0 && len(modules) == 0 {
-		a.emit("dl_error", map[string]interface{}{
-			"index": index, "message": "Course has no content.",
-		})
-		return false, false
+		return false, false, true
 	}
 
 	// Count total lessons for progress display
@@ -978,7 +1051,7 @@ func (a *App) kiwifyDownloadOneAttempt(index int) (ok bool, retryable bool) {
 					lpath := filepath.Join(modDir, fmt.Sprintf("%02d - %s", li+1, ltitle))
 					if !processLesson(lm, lpath) {
 						a.emit("dl_cancelled", map[string]interface{}{"index": index})
-						return false, false
+						return false, false, false
 					}
 				}
 			}
@@ -1003,17 +1076,13 @@ func (a *App) kiwifyDownloadOneAttempt(index int) (ok bool, retryable bool) {
 				lpath := filepath.Join(modDir, fmt.Sprintf("%02d - %s", li+1, ltitle))
 				if !processLesson(lm, lpath) {
 					a.emit("dl_cancelled", map[string]interface{}{"index": index})
-					return false, false
+					return false, false, false
 				}
 			}
 		}
 	}
 
-	markCourseComplete(courseDir)
-	a.emit("dl_complete", map[string]interface{}{
-		"index": index, "folder": courseDir,
-	})
-	return true, false
+	return true, false, false
 }
 
 // kiwifyDownloadBatch downloads multiple courses sequentially.
